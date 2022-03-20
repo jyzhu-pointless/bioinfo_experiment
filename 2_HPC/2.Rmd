@@ -1,0 +1,347 @@
+---
+title: "Untitled"
+author: "Jinyu_Zhu"
+date: "3/20/2022"
+output: html_document
+---
+
+# Investigations on Human Chromosome 21
+
+**朱瑾煜 Zhu Jinyu, 2000012180**
+
+## 1 Objectives
+
+- Obtain biological information (including length, number of genes, distribution of transcripts per gene, etc.) from the sequence data and the annotation of human Chromosome 21.
+- Compare Chromosome 21 with other human chromosomes.
+- Practice using HPC and basic commands of Linux/UNIX.
+
+## 2 Introduction
+
+Chromosome 21 is the smallest chromosome in human genome, containing about 48 million base pairs and 872 genes. Chromosome 21 is essential for human and is related to some important genetic diseases, such as Down's syndrome due to an extra copy of Chromosome 21. In this project, we explore  the sequence and annotation of Chromosome 21 to better undestand its biological role and function, and to practice using HPC and Linux/UNIX at the same time.
+
+## 3 Methods and materials
+
+### 3.1 Linux/UNIX systems
+
+The following Linux/UNIX systems are applied to this project.
+
+- High performance computing platform on <http://www.aais.pku.edu.cn/clshpc/cqbsys/>, `CentOS Linux release 7.6.1810 (Core)`
+- Personal lighthouse server on [Tencent Cloud](https://cloud.tencent.com/), `CentOS Linux release 7.9.2009 (Core)`
+- Personal MacBook Pro, `macOS Monterey 12.0.1` (macOS is a variety of UNIX, quite similar to Linux)
+
+Most of the data is downloaded using `scp` command from HPC, and most of the work is done on personal server and MacBook Pro, **since the HPC cannot write anything**.
+
+### 3.2 R Language
+
+The version of R Language in this project is `R 4.1.2`. Packages `tidyverse` and `ggplot2` is also applied.
+
+### 3.3 Data
+
+The data file names and their sources are as follows:
+
+- `chr21.fa`, the sequence file of Chromosome 21 in `fasta` format, unknown source (on HPC)
+- `annotation.gtf`, the annotation file of Chromosome 21 in `gtf` format, from Ensembl (on HPC)
+- `wholeGenome.gtf`, the annotation file of whole human genome (including mitochondrial DNA, MT) in `gtf` format, from Ensembl (manually downloaded from <http://ftp.ensembl.org/pub/current_gtf/homo_sapiens/Homo_sapiens.GRCh38.105.chr.gtf.gz>)
+
+## 4 Results
+
+### 4.1 Length of Chromosome 21
+
+Use the following command to count bases in the sequence file `chr21.fa`.
+
+```shell
+# base count
+cat chr21.fa | wc -c
+```
+
+The result is `47644190 chr21.fa`, meaning there is 47,644,190 characters in the `fasta` file. Considering the file is leading by a prompt sequence `>chr21`, this 6 characters should be subtracted from the result. Therefore, there is altogether 47,644,184 base pairs in Chromosome 21; i.e., the length of Chromosome 21 is 47,644,184 bp.
+
+We noticed that there are lots of `N`s at the beginning and the end of the sequence. The following command tells that there are actually 6,755,800 `N`s. The letter `N` represents any of the four bases `A`, `T`, `G` and `C`.
+
+```shell
+# N count
+cat chr21.fa | grep 'N' | wc -c
+```
+
+### 4.2 Number of different features on Chromosome 21
+
+```shell
+# obtain a list of different kinds of features (the first 5 lines are descriptions to the file, beginning with #, which are removed by `tail +6`)
+cat annotation.gtf | cut -f 3 | tail +6 | sort -u > category.txt
+
+# obtain the number of each feature
+cat category.txt | while read line
+do
+    echo $(cat annotation.gtf | cut -f 3 | tail +6 | grep $line | wc -w)'\t'$line's' >> category_results.txt
+done
+```
+
+The results are in `category.txt` and `category_results.txt`:
+
+```
+category.txt
+CDS
+UTR
+exon
+gene
+start_codon
+stop_codon
+transcript
+
+category_results.txt
+7709	CDSs
+2896	UTRs
+16659	exons
+872	genes
+857	start_codons
+813	stop_codons
+2925	transcripts
+```
+
+There are 7,709 CDSs (coding sequences), 2,896 UTRs (untranslated regions), 16,659 exons, 872 genes, 857 start codons, 813 stop codons, and 2925 different transcripts on Chromosome 21.
+
+### 4.3 Gene ID
+
+The following command lists the first 6 gene IDs in the annotation file.
+
+```shell
+# List gene ID
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | cut -f 2 | head 6
+```
+
+```
+gene_id "ENSG00000279493.1"
+gene_id "ENSG00000279493.1"
+gene_id "ENSG00000279493.1"
+gene_id "ENSG00000279493.1"
+gene_id "ENSG00000279493.1"
+gene_id "ENSG00000279493.1"
+```
+
+### 4.4 Numbers of transcripts per gene
+
+A list of different (without repeats) gene IDs and a list of transcripts with their gene ID are obtained and saved in `geneID.txt` and `transcripts.txt` respectively.
+
+```shell
+# list gene ID (unique sorted)
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | cut -f 2 | sort -u > geneID.txt
+
+# list transcripts with gene ID
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | awk -F '\t' '$1 == "transcript" {print $2}' > transcripts.txt
+```
+
+Then, the following commands are applied to obtain how many transcripts each gene has.
+
+```shell
+# count transcripts per gene ID
+cat geneID.txt | while read line
+do
+    echo $line'\t'$(cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | awk -F '\t' '$1 == "transcript" {print $1, $2}' | grep $line | wc -l) >> geneID_count.txt
+done
+```
+
+Here we display the first 6 lines of the output `geneID_count.txt`: (872 lines in total, since there are altogether 872 genes, according to Section 4.2)
+
+```
+gene_id "ENSG00000141956.13"	 16
+gene_id "ENSG00000141959.17"	 12
+gene_id "ENSG00000142149.9"	 4
+gene_id "ENSG00000142156.14"	 7
+gene_id "ENSG00000142166.13"	 7
+gene_id "ENSG00000142168.14"	 4
+```
+
+and draw a histogram showing the distribution of transcript number per gene using R.
+
+```R
+library(ggplot2)
+library(tidyverse)
+
+
+ggplot()
+```
+
+### 4.5 lncRNA
+
+lncRNAs, or long non-coding RNAs (long ncRNAs, lncRNA), are commonly defined as RNAs with more than 200 nucleotides that are not translated into protein, including intergenic lincRNAs, intronic ncRNAs, and sense and antisense lncRNAs.
+
+In order to realize how many lncRNA genes and transcripts Chromosome 21 has, the following commands are applied:
+
+```shell
+# number of lncRNA genes and transripts
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | awk -F '\t' '$1 == "gene" {print $3}' | grep 'lncRNA' | wc -l
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | awk -F '\t' '$1 == "transcript" {print $4}' | grep 'lncRNA' | wc -l
+```
+
+The results show that there are 330 lncRNA genes and 1,039 lncRNA transcripts.
+
+Additionally, we wanted to find out whether there is a gene encoding both proteins and lncRNAs. We tried to simply look at the `gene_type` description by the following commands, but that was not helpful.
+
+```shell
+## gene_type description does not contain two functions at the same time
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | awk -F '\t' '$1 == "gene" {print $3}' | sort -u
+```
+
+The descriptions do not contain two functions at the same time -- in other words, there is not a `gene_type` like `"protein_coding_and_lncRNA"`.
+
+```
+ gene_type "IG_V_gene"
+ gene_type "TEC"
+ gene_type "lncRNA"
+ gene_type "miRNA"
+ gene_type "misc_RNA"
+ gene_type "processed_pseudogene"
+ gene_type "protein_coding"
+ gene_type "pseudogene"
+ gene_type "rRNA"
+ gene_type "rRNA_pseudogene"
+ gene_type "snRNA"
+ gene_type "snoRNA"
+ gene_type "transcribed_processed_pseudogene"
+ gene_type "transcribed_unprocessed_pseudogene"
+ gene_type "unprocessed_pseudogene"
+```
+
+However, we found that some transcripts are lncRNAs, but they belong to protein coding genes, like the following one:
+
+```
+chr21	HAVANA	transcript	5120634	5124868	.	-	.	gene_id "ENSG00000280071.4"; transcript_id "ENST00000624748.2"; gene_type "protein_coding"; gene_name "GATD3B"; transcript_type "lncRNA"; transcript_name "GATD3B-209"; level 2; transcript_support_level "3"; hgnc_id "HGNC:53816"; havana_gene "OTTHUMG00000189357.4"; havana_transcript "OTTHUMT00000479434.1";
+```
+
+The following commands tell that there are 335 lncRNA transcripts belonging to protein coding genes. Therefore, we draw a conclusion that a gene can encode proteins and lncRNAs at the same time.
+
+```shell
+cat annotation.gtf | cut -f 3,9 | tail +6 | sed 's/;/\t/g' | awk -F '\t' '$1 == "transcript" && $4 == " gene_type \"protein_coding\"" && $6 == " transcript_type \"lncRNA\"" {print}' | wc -l
+```
+
+### 4.6 Overview to the whole genome
+
+Use manually downloaded `wholeGenome.gtf`, and the following commands to obtain features of the whole genome:
+
+```shell
+cat wholeGenome.gtf | cut -f 3 | tail +6 | sort -u > category_WG.txt
+cat category_WG.txt | while read line
+do
+    echo $(cat wholeGenome.gtf | cut -f 3 | tail +6 | grep $line | wc -w)'\t'$line's' >> category_results_WG.txt
+done
+```
+
+The file `category_WG.txt` shows the following types of features:
+
+```
+CDS
+Selenocysteine
+exon
+five_prime_utr
+gene
+start_codon
+stop_codon
+three_prime_utr
+transcript
+```
+
+and `category_results_WG.txt` shows the number of each type of features.
+
+```
+839388	CDSs
+119	Selenocysteines
+1551825	exons
+166120	five_prime_utrs
+61487	genes
+94107	start_codons
+87624	stop_codons
+190559	three_prime_utrs
+244766	transcripts
+```
+
+We see that there are 61,487 genes in the whole genome, and 119 codons that decides the 21th amino acid Selenocysteine, etc.
+
+### 4.7 Comparation between Chromesome 21 with Chromosome 1
+
+The commands are almost the same:
+
+```shell
+# Chromosome 1
+cat wholeGenome.gtf | awk -F '\t' '$1 == "1" {print $0}' > chr1.gtf
+## gene/CDS/exon count
+cat chr1.gtf | cut -f 3 | tail +6 | sort -u > category1.txt
+cat category1.txt | while read line
+do
+    echo $(cat chr1.gtf | cut -f 3 | tail +6 | grep $line | wc -w)'\t'$line's' >> category_results_1.txt
+done
+```
+
+Results in `category_results_1.txt`:
+
+```
+78665	CDSs
+12	Selenocysteines
+143324	exons
+14466	five_prime_utrs
+5556	genes
+8392	start_codons
+8123	stop_codons
+17134	three_prime_utrs
+21576	transcripts
+```
+
+According to <http://asia.ensembl.org/>, the length of human Chromosome 1 is 248,956,422 bp, over five times longer than Chromosome 21. And according to the results, Chromosome 1 has 5,556 genes, over six times more than Chromosome 21 (see Table 1 in Section 4.8). We make the hypothesis that the number of genes a chromosome has is proportion to the DNA length.
+
+### 4.8 Comparation between the two versions of `gtf` annotations
+
+Files `annotation.gtf` and `wholeGenome.gtf` are both from Ensembl, but they are slightly different. The former is an older version (2019.09), while the latter is newer (2021.08). Their 3rd rows, or the feature part are different. The feature `UTR` in `annotation.gtf` is divided into two features `five_prime_utr` (5'-UTR) and `three_prime_utr` (3'-UTR) in `wholeGenome.gtf`, and a new feature `Selenocysteine` is added, representing codons that decides Selenocysteine, a newly-discovered protein amino acid.
+
+By the following commands, the features of Chromesome 21 in `wholeGenome.gtf` can also be obtained.
+
+```shell
+cat wholeGenome.gtf | awk -F '\t' '$1 == "21" {print $0}' > chr21.gtf
+cat category_WG.txt | while read line
+do
+    echo $(cat chr21.gtf | cut -f 3 | tail +6 | grep $line | wc -w)'\t'$line's' >> category_results_21.txt
+done
+```
+
+Results:
+
+```
+8570	CDSs
+0	Selenocysteines
+18341	exons
+1793	five_prime_utrs
+890	genes
+926	start_codons
+904	stop_codons
+1527	three_prime_utrs
+3121	transcripts
+```
+
+Here we compare the features of Chromosome 21 in `annotation.gtf`, Chromosome 21 in `wholeGenome.gtf`, and Chromosome 1 in `wholeGenome.gtf` in **Table 1**:
+
+>  **Table 1. **Comparation of the features of Chromosome 21 in `annotation.gtf`, Chromosome 21 in `wholeGenome.gtf`, and Chromosome 1 in `wholeGenome.gtf`
+
+|                 | Chr21, `annotation.gtf` | Chr21, `wholeGenome.gtf` | Chr1, `wholeGenome.gtf` |
+| --------------- | ----------------------- | ------------------------ | ----------------------- |
+| CDSs            | 7,709                   | 8,570                    | 78,665                  |
+| Selenocysteines | 0                       | 0                        | 12                      |
+| Exons           | 16,659                  | 18,341                   | 143,324                 |
+| UTRs (total)    | 2,896                   | 3,320                    | 31,600                  |
+| 5'-UTRs         | N/A                     | 1,793                    | 14,466                  |
+| 3'-UTRs         | N/A                     | 1,527                    | 17,134                  |
+| Genes           | 872                     | 890                      | 5,556                   |
+| Start codons    | 857                     | 926                      | 8,392                   |
+| Stop codons     | 813                     | 904                      | 8,123                   |
+| Transcripts     | 2,925                   | 3,121                    | 21,576                  |
+
+## 5 Discussion
+
+
+
+## 6 Acknowledgement
+
+
+
+## 7 Supplementary Information
+
+
+
+## 8 References

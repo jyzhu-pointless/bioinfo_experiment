@@ -1,0 +1,9 @@
+839388	CDSs
+119	Selenocysteines
+1551825	exons
+166120	five_prime_utrs
+61487	genes
+94107	start_codons
+87624	stop_codons
+190559	three_prime_utrs
+244766	transcripts
