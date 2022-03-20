@@ -1,0 +1,132 @@
+---
+title: "Lecture1"
+author: "Jinyu_Zhu"
+date: "3/1/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Lecture 1: Introduction to R Programming Language
+
+## Help
+
+Get help for a certain function
+
+```{r}
+help("plot")
+help(plot)
+?plot
+??plot
+```
+
+Get help for a function containing a required string
+
+```{r}
+apropos("fun") # find functions containing the string "fun"
+help.search("fun")
+```
+
+Vignettes and code demonstrations
+
+```{r echo="F"}
+browseVignettes() # show a vignette in a browser
+vignette("rotated") # show a vignette in a PDF file
+demo(smooth) # show a demo code
+```
+
+## Data structure
+
+Vector
+
+```{r}
+math <- c(98,96,97,100,88)
+math[1]
+math[c(1,2)]
+mean(math)
+max(math)
+min(math)
+var(math)
+# name elements
+names(math) <- c("Alice","Bob","Carol","Dave","Eve")
+math["Bob"]
+```
+
+Matrix
+
+```{r}
+matrix_c <- matrix(1:12, byrow=FALSE, ncol=3) # fill in elements by column
+matrix_c
+dim(matrix_c)
+nrow(matrix_c)
+ncol(matrix_c)
+matrix_c[1,]
+matrix_c[,2]
+matrix_c[1,2]
+matrix_c[1,c(2,3)]
+add_row <- c(1:3)
+matrix_c <- rbind(matrix_c, add_row) # add a row
+matrix_c
+```
+
+List
+
+```{r}
+lst <- list(math,matrix_c,826)
+lst
+typeof(lst)
+lst[[2]]
+lst[c(1,2)]
+names(lst) <- c("num","vector","df") # hashtable
+lst[["vector"]]
+lst$vector
+```
+
+Data frame
+
+```{}
+data(mtcars)
+View(mtcars)
+head(mtcars)
+View(head(mtcars))
+```
+
+Factor
+
+```{r}
+gender_vector <- c("Male","Female","Male","Female","None")
+gender <- factor(gender_vector)
+levels(gender)
+as.character(gender)
+as.vector(gender)
+```
+
+## Read & Write data
+
+```{r}
+write.csv(mtcars, "mtcars.csv")
+mtcars_read <- read.csv("mtcars.csv", header=T, sep=',') # seq=',' is default
+```
+
+## Workspace
+
+```{r}
+save.image("~/test.RData")
+load("~/test.RData")
+```
+
+## Tidyverse
+
+Pipe
+```{}
+x %>% f
+```
+
+Select, Arrange & Join
+```{r}
+mtcars %>% group_by(vs) %>% summarise(count=n(), mean.mpg=mean(mpg))
+```
+
+## ggplot
+
+
