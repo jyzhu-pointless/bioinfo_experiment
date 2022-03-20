@@ -1,0 +1,7 @@
+7709	CDSs
+2896	UTRs
+16659	exons
+872	genes
+857	start_codons
+813	stop_codons
+2925	transcripts
