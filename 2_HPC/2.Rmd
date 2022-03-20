@@ -1,12 +1,4 @@
----
-title: "Untitled"
-author: "Jinyu_Zhu"
-date: "3/20/2022"
-output: html_document
----
-
 # Investigations on Human Chromosome 21
-
 **朱瑾煜 Zhu Jinyu, 2000012180**
 
 ## 1 Objectives
@@ -17,7 +9,7 @@ output: html_document
 
 ## 2 Introduction
 
-Chromosome 21 is the smallest chromosome in human genome, containing about 48 million base pairs and 872 genes. Chromosome 21 is essential for human and is related to some important genetic diseases, such as Down's syndrome due to an extra copy of Chromosome 21. In this project, we explore  the sequence and annotation of Chromosome 21 to better undestand its biological role and function, and to practice using HPC and Linux/UNIX at the same time.
+Chromosome 21 is the smallest chromosome in human genome, containing about 48 million base pairs and 215 protein coding genes.[^1] Chromosome 21 is essential for human and is related to some important genetic diseases, such as Down's syndrome due to an extra copy of Chromosome 21. In this project, we explore  the sequence and annotation of Chromosome 21 to better undestand its biological role and function, and to practice using HPC and Linux/UNIX at the same time.
 
 ## 3 Methods and materials
 
@@ -153,17 +145,20 @@ gene_id "ENSG00000142168.14"	 4
 
 and draw a histogram showing the distribution of transcript number per gene using R.
 
-```R
-library(ggplot2)
+```{r}
 library(tidyverse)
+library(ggplot2)
 
+transcripts <- read.table("/Users/jinyuzhu/Desktop/lib_data/geneID_count.txt", sep = "\t")
 
-ggplot()
+names(transcripts) <- c("Gene","Frequency")
+
+ggplot(data = transcripts, mapping = aes(x = Frequency)) + geom_histogram(binwidth = 5) + scale_x_continuous(breaks = seq(0,150,10)) + labs(caption = "Figure 1. Histogram of transcripts per gene on human Chromosome 21", x = "Numbers of transcripts", y = "Frequency") + theme(plot.caption=element_text(size=10,hjust=0.5,color="blue"))
 ```
 
 ### 4.5 lncRNA
 
-lncRNAs, or long non-coding RNAs (long ncRNAs, lncRNA), are commonly defined as RNAs with more than 200 nucleotides that are not translated into protein, including intergenic lincRNAs, intronic ncRNAs, and sense and antisense lncRNAs.
+lncRNAs, or long non-coding RNAs (long ncRNAs, lncRNA), are commonly defined as RNAs with more than 200 nucleotides that are not translated into protein, including intergenic lincRNAs, intronic ncRNAs, and sense and antisense lncRNAs.[^2]
 
 In order to realize how many lncRNA genes and transcripts Chromosome 21 has, the following commands are applied:
 
@@ -322,7 +317,7 @@ Here we compare the features of Chromosome 21 in `annotation.gtf`, Chromosome 21
 |                 | Chr21, `annotation.gtf` | Chr21, `wholeGenome.gtf` | Chr1, `wholeGenome.gtf` |
 | --------------- | ----------------------- | ------------------------ | ----------------------- |
 | CDSs            | 7,709                   | 8,570                    | 78,665                  |
-| Selenocysteines | 0                       | 0                        | 12                      |
+| Selenocysteines | N/A                     | 0                        | 12                      |
 | Exons           | 16,659                  | 18,341                   | 143,324                 |
 | UTRs (total)    | 2,896                   | 3,320                    | 31,600                  |
 | 5'-UTRs         | N/A                     | 1,793                    | 14,466                  |
@@ -334,14 +329,20 @@ Here we compare the features of Chromosome 21 in `annotation.gtf`, Chromosome 21
 
 ## 5 Discussion
 
-
+1. A gene may have different transcripts due to alternative splicing. Most of the genes on Chromosome 21 has only one kind of transcript, while some of them can have many transcripts (maximum is 143, `gene_id ENSG00000215386.13`
+).
+2. lncRNAs are essential and widely distributed in human genome. Many lncRNAs are actually transcripted from protein coding genes.
+3. The number of genes on a chromosome is positively correlated to the length of chromosome.
+4. Bioinformatics is an ever-changing subject, and so are bioinformatic databases. In recent years, more genes and other features are found, and even a new protein amino acid Selenocysteines is discovered. That is why the two versions of annotation files are so different.
 
 ## 6 Acknowledgement
 
-
+Thanks to the instructor Fenglin Liu and teaching assistant Xinyu Yang for providing devices and giving guidance on this project. Thanks to my teammate, Xinyi Zhang for her cooperation.
 
 ## 7 Supplementary Information
 
-
+All source code are avaliable on GitHub: <https://github.com/jyzhu2020/bioinfo_experiment/tree/main/2_HPC>.
 
 ## 8 References
+[^1]: https://en.wikipedia.org/wiki/Chromosome_21
+[^2]: https://en.wikipedia.org/wiki/Long_non-coding_RNA
